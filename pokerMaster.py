@@ -1,4 +1,11 @@
+'''
+Implementation of the AI poker player.
+'''
+
 from evaluatorTest import *
+from playerModel import *
+
+from datetime import datetime
 
 import random
 
@@ -11,6 +18,7 @@ class Table(object):
         self.player_stacks = [INITIAL_STACK_SIZE] * 6
         self.player_bets = [0] * 6
         self.open_cards = []
+        # Assuming here that ego is always in position 0
         self.dealer_position = random.randint(0, 5)
         self.player_cards = self.deck.dealCards(number_of_players=6)
 
@@ -41,4 +49,11 @@ class Deck(object):
 
 if __name__ == '__main__':
     initial_table = Table()
-    #testHands()
+    player_model = PlayerModel()
+    player_model.act(initial_table)
+
+    # Currently allows about 13,000 hand scorings per second. If turns out to be a bottleneck will improve later.
+    print(datetime.now())
+    for i in range(50000):
+        testHands()
+    print(datetime.now())

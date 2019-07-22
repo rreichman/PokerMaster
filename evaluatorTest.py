@@ -1,6 +1,8 @@
-from evaluator import *
+'''
+Where we test the hand evaluator.
+'''
 
-import datetime
+from evaluator import *
 
 def testStraightFlush():
     straight_flush_preset = VALUE_PRESETS["straight_flush"]

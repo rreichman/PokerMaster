@@ -1,3 +1,7 @@
+'''
+Where we evaluate the score of a hand. Used to decide who wins in a hand.
+'''
+
 import math
 
 POWER_PRESET = 100000000
