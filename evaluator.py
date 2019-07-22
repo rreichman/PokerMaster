@@ -5,6 +5,25 @@ VALUE_PRESETS = {"straight_flush" : 10 * POWER_PRESET, "four_of_kind" : 9 * POWE
                  "full_house" : 8 * POWER_PRESET, "flush" : 7 * POWER_PRESET, "straight": 6 * POWER_PRESET,
                  "three_of_kind" : 5 * POWER_PRESET, "two_pair" : 4 * POWER_PRESET, "pair" : 3 * POWER_PRESET}
 
+def getHandScore(hand):
+    hand_with_aces_as_fourteens = []
+    has_aces = False
+    for card in hand:
+        if card[0] == 1:
+            has_aces = True
+            hand_with_aces_as_fourteens.append([14, card[1]])
+        else:
+            hand_with_aces_as_fourteens.append(card)
+
+    evaluator = HandEvaluator(hand)
+    small_aces_score = evaluator.getScore()
+
+    if has_aces:
+        evaluator_aces = HandEvaluator(hand_with_aces_as_fourteens)
+        large_aces_score = evaluator_aces.getScore()
+        return max(small_aces_score, large_aces_score)
+    else:
+        return small_aces_score
 
 def getHighestCardScore(cards, number_of_cards_to_count):
     sorted_by_rank = sorted(cards, key=lambda x: x[0])
