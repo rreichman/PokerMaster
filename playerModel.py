@@ -11,7 +11,8 @@ class Action(object):
         self.type = type
         self.value = value
 
-actions = [Action("Raise", 100), Action("Check"), Action("Fold")]
+#actions = [Action("Raise", 100), Action("Check"), Action("Fold")]
+actions = [Action("Check")]
 
 class PlayerModel(object):
     def __init__(self):

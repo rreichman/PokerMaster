@@ -4,9 +4,10 @@ Implementation of the AI poker player.
 
 from evaluatorTest import *
 from playerModel import *
+from objects import *
 
 from datetime import datetime
-
+import copy
 import random
 
 INITIAL_STACK_SIZE = 1500
@@ -59,13 +60,94 @@ class Table(object):
         if len(self.open_cards) == 5:
             self.divideSpoils()
 
-    def divideSpoils(self):
-        # TODO:: this is a bit complex, make sure you do it right.
-        winners = self.getWinners()
-        for i in range(len(self.player_bets)):
-            self.player_stacks[i] -= self.player_bets[i]
+    def getPlayerScores(self):
+        player_scores = []
+        open_cards_as_lists = copy.deepcopy(self.open_cards)
+        for i in range(len(open_cards_as_lists)):
+            open_cards_as_lists[i] = [open_cards_as_lists[i].rank, open_cards_as_lists[i].suit]
 
-        prize_per_winner = self.pot_size / len(winners)
+        for i in range(NUM_OF_PLAYERS):
+            if self.players_in_round[i]:
+                player_hand = copy.deepcopy(open_cards_as_lists)
+                player_cards_as_cards = self.player_cards[i]
+                player_hand.append([player_cards_as_cards[0].rank, player_cards_as_cards[0].suit])
+                player_hand.append([player_cards_as_cards[1].rank, player_cards_as_cards[1].suit])
+                player_scores.append(getHandScore(player_hand))
+            else:
+                player_scores.append(0)
+
+        return player_scores
+
+    def getWinners(self, player_scores):
+        max_val = 0
+        winners = []
+
+        for i in range(len(player_scores)):
+            if player_scores[i] > max_val and self.players_in_round[i]:
+                max_val = player_scores[i]
+                winners = [[i,self.player_bets[i]]]
+            elif player_scores[i] == max_val and self.players_in_round[i]:
+                winners.append([i,self.player_bets[i]])
+
+        return winners
+
+    def getWinnerGroups(self, winners):
+        winner_groups = []
+        winners_sorted_by_pot_size = sorted(winners, key=lambda x: x[1])
+
+        current_winner_pot_size = winners_sorted_by_pot_size[0][1]
+        current_group = [winners_sorted_by_pot_size[0]]
+        for j in range(len(winners_sorted_by_pot_size) - 1):
+            i = j + 1
+            if winners_sorted_by_pot_size[i][1] == current_winner_pot_size:
+                current_group.append(winners_sorted_by_pot_size[i])
+            else:
+                winner_groups.append(current_group)
+                current_group = [winners_sorted_by_pot_size[i]]
+        winner_groups.append(current_group)
+
+        return winner_groups
+
+    def giveWinningsToWinners(self, winners):
+        winner_ids = [item[0] for item in winners]
+        winner_groups = self.getWinnerGroups(winners)
+
+        for winner_group in winner_groups:
+            winner_ids_in_group = [item[0] for item in winner_group]
+            for winner_id in winner_ids_in_group:
+                # Give winnings to first group
+                for i in range(len(self.player_bets)):
+                    if i not in winner_ids and self.player_bets[i] > 0:
+                        value_transferred = self.player_bets[i] / len(winners)
+                        self.player_stacks[i] -= value_transferred
+                        self.player_bets[i] -= value_transferred
+                        self.player_stacks[winner_id] += value_transferred
+                self.player_bets[winner_id] = 0.0
+
+    def divideSpoils(self):
+        # TODO:: make sure you test this
+        player_scores = self.getPlayerScores()
+
+        did_clean_all_players = False
+        while not did_clean_all_players:
+            winners = self.getWinners(player_scores)
+
+            self.giveWinningsToWinners(winners)
+            did_clean_all_players = (sum(self.player_bets) == 0)
+
+        print()
+        '''for winner_group in winner_groups:
+            for winner in winner_group:
+                for i in range(len(self.player_bets)):
+                    if i not in winner_ids:
+                        value_transferred = self.player_bets[winner[1]] / len(winners)
+                        self.player_stacks[i] -= value_transferred
+                        self.player_stacks[winner[0]] += value_transferred'''
+
+        #for i in range(len(self.player_bets)):
+        #    self.player_stacks[i] -= self.player_bets[i]
+
+        #prize_per_winner = self.pot_size / len(winners)
 
     def getAction(self, action):
         action_string = "\nPlayer " + str(self.current_player_index) + " played " + action.type
@@ -110,49 +192,28 @@ class Table(object):
         print("Players in round:")
         print(self.players_in_round)
         print("Pot size: " + str(self.pot_size))
+
         print("\nOpen cards:")
-        open_cards_string = ""
         if len(self.open_cards) == 0:
-            open_cards_string = "[]"
+            print("[]")
         for i in range(len(self.open_cards)):
-            open_cards_string += self.open_cards[i].getString() + ","
-        print(open_cards_string)
-        #for i in range(len(self.player_cards))
+            print(self.open_cards[i].getString())
+
         print("Player cards:")
         for i in range(len(self.player_cards)):
             cards = self.player_cards[i]
             print("Player " + str(i) + ". Cards: " + cards[0].getString() + ", " + cards[1].getString())
         print("Last raiser: " + str(self.last_raiser))
 
-class Card(object):
-    def __init__(self, rank, suit):
-        self.rank = rank
-        self.suit = suit
+def testWinningFunctions():
+    table = Table()
+    # TODO:: implement
 
-    def getString(self):
-        return "Rank: " + str(self.rank) + ", Suit: " + str(self.suit)
-
-class Deck(object):
-    def __init__(self):
-        self.cards = []
-        for i in range(1,14,1):
-            for j in range(4):
-                self.cards.append(Card(i, j))
-
-    def pop(self):
-        card_index = random.randint(0, len(self.cards) - 1)
-        card = self.cards[card_index]
-        del self.cards[card_index]
-        return card
-
-    def dealCards(self, number_of_players):
-        player_cards = []
-        for player_index in range(number_of_players):
-            player_cards.append([self.pop(), self.pop()])
-
-        return player_cards
+    #table.
 
 if __name__ == '__main__':
+    testWinningFunctions()
+
     table = Table()
     player_model = PlayerModel()
     table.print()

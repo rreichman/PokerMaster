@@ -4,6 +4,8 @@ Where we evaluate the score of a hand. Used to decide who wins in a hand.
 
 import math
 
+from objects import *
+
 POWER_PRESET = 100000000
 VALUE_PRESETS = {"straight_flush" : 10 * POWER_PRESET, "four_of_kind" : 9 * POWER_PRESET,
                  "full_house" : 8 * POWER_PRESET, "flush" : 7 * POWER_PRESET, "straight": 6 * POWER_PRESET,
