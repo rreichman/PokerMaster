@@ -1,5 +1,5 @@
 '''
-Where we evaluate the score of a hand. Used to decide who wins in a hand.
+Where we evaluate the score of a hand. Used to decide who wins in a single hand.
 '''
 
 import math
